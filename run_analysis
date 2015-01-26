@@ -1,0 +1,58 @@
+setwd("E:/Data/programme3/UCI HAR Dataset")
+
+ ##read all txt
+dataX_train<-read.table("E:/Data/programme3/UCI HAR Dataset/train/X_train.txt",header=F)
+dataY_train<-read.table("E:/Data/programme3/UCI HAR Dataset/train/Y_train.txt",header=F)
+dataX_test<-read.table("E:/Data/programme3/UCI HAR Dataset/test/X_test.txt",header=F)
+dataY_test<-read.table("E:/Data/programme3/UCI HAR Dataset/test/Y_test.txt",header=F)
+subject_train<-read.table("E:/Data/programme3/UCI HAR Dataset/train/subject_train.txt",header=F)
+subject_test<-read.table("E:/Data/programme3/UCI HAR Dataset/test/subject_test.txt",header=F)
+feature<-read.table("E:/Data/programme3/UCI HAR Dataset/features.txt",header=F)
+activity_label<-read.table("E:/Data/programme3/UCI HAR Dataset/activity_labels.txt")
+
+
+##3.Uses descriptive activity names to name the activities in the data set
+#label No. to label names
+colnames(activity_label)<-c("No.","acitivtiy_label")
+colnames(dataY_test)<-"No."
+colnames(dataY_train)<-"No."
+label_test<-merge(activity_label,dataY_test,all=TRUE)
+label_train<-merge(activity_label,dataY_train,all=TRUE)
+
+#combine subject and activity  names to data set
+traindata<-cbind(label_train[,2],subject_train,dataX_train)
+testdata<-cbind(label_test[,2],subject_test,dataX_test)
+
+##4.Appropriately labels the data set with descriptive variable names. 
+#names all the coloumn
+colnames(traindata)<-c("activity_label", "subject",as.character(feature[,2]))
+colnames(testdata)<-c("activity_label", "subject",as.character(feature[,2]))
+
+##1.Merges the training and the test sets to create one data set.
+#combine train data and test data
+data<-rbind(traindata, testdata)
+
+##2.Extracts only the measurements on the mean and standard deviation
+##for each measurement.
+colname<-colnames(data)
+index<-c(grep("mean()",colname,fixed=FALSE),grep("std()",colname,fixed=FALSE),grep("Mean",colname,fixed=FALSE))
+mean_and_std<-data[,index]
+
+
+##5.From the data set in step 4, creates a second, independent tidy data set
+##with the average of each variable for each activity and each subject.
+
+#melt data of measurement with activity and subject
+library(reshape2)
+datamelt<-melt(data,id=c("activity_label","subject"))
+
+#creat new data set with the average of each variable for each activity and subject 
+data2_ave<-dcast(datamelt, subject + activity_label ~ variable,mean)
+
+##print out data set data_ave
+print(data2_ave)
+
+##save data2_ave as txt
+write.table(data2_ave,file="E:/Data/programme3/UCI HAR Dataset/data2_ave.txt",row.names=FALSE)
+
+    
